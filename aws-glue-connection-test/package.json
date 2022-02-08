@@ -2,5 +2,9 @@
   "devDependencies": {
     "serverless-dotenv-plugin": "^3.12.2",
     "serverless-s3-sync": "^2.0.0"
+  },
+  "scripts": {
+    "deploy": "sls deploy --aws-profile aws-test-con --region us-east-2 --stage dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
