@@ -1,0 +1,109 @@
+service: aws-glue-connection-test
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+
+functions:
+  hello:
+    handler: handler.hello
+
+plugins:
+  - serverless-s3-sync
+  - serverless-dotenv-plugin
+custom:
+  settings:
+    maxRetries: 0
+  s3Sync:
+    - bucketNameKey: TesConnectionScritpBucket
+      bucketPrefix: scripts/
+      localDir: scripts
+
+resources:
+  Resources:
+    TesConnectionScritpBucket:
+      Type: AWS::S3::Bucket
+
+    TestConnectionAWSGlueJobRole:
+      Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - glue.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Policies:
+          - PolicyName: root
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "s3:GetObject"
+                    - "s3:PutObject"
+                    - "s3:ListBucket"
+                    - "s3:DeleteObject"
+                  Resource:
+                    - !Join [
+                        "",
+                        ["arn:aws:s3:::", !Ref TesConnectionScritpBucket],
+                      ]
+                    - !Join [
+                        "",
+                        ["arn:aws:s3:::", !Ref TesConnectionScritpBucket, "/*"],
+                      ]
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+        Path: "/"
+
+    ETLtestConnectionJob:
+      Type: "AWS::Glue::Job"
+      Properties:
+        Command:
+          {
+            "Name": "glueetl",
+            "ScriptLocation":
+              !Join [
+                "",
+                ["s3://", !Ref TesConnectionScritpBucket, "/scripts/db_con_validator.py"],
+              ],
+          }
+        
+        #Connections:
+          #Connections:
+          #Add connection here or add manualy
+          #  - !Ref SourceETLSQLServerConnection
+          #  - !Ref IntermediaETLSQLServerConnection
+          #  - !Ref Avail10ETLOracleConnection
+        DefaultArguments:
+          {
+            "--enable-metrics": "1",
+            "--extra-py-files":
+
+          #ADD ENVIROMENT VARIABLES IF IS NECESARY
+          # "--source_conn": !Ref SourceETLSQLServerConnection,
+          #"--source_database": "${env:SOURCE_DATABASE}",
+          # "--source_schema": "${env:SOURCE_SCHEMA}",
+
+          # "--intermedia_conn": !Ref IntermediaETLSQLServerConnection,
+          #  "--intermedia_database": "${env:INTERMEDIA_DATABASE}",
+          # "--intermedia_schema": "${env:INTERMEDIA_SCHEMA}",
+
+          # "--destino_conn": !Ref Avail10ETLOracleConnection,
+          # "--destino_database": "${env:DESTINO_DATABASE}",
+          # "--DESTINO_JDBC_CONNECTION_URL": "${env:DESTINO_JDBC_CONNECTION_URL}",
+          }
+        Description: Avail10_ETL_Kinds_Job
+        GlueVersion: "2.0"
+        MaxRetries: 0
+        NumberOfWorkers: 2
+        Role: !Ref Avail10ETLAWSGlueJobRole
+        # Tags: { "env": "${opt:stage}" }
+        Timeout: 5 # The job timeout in minutes
+        WorkerType: Standard
