@@ -32,6 +32,13 @@ npm run deploy
 * [AWS GLUE](https://aws.amazon.com/es/glue/)
 * [AWS S3](https://aws.amazon.com/es/s3/)
 
+## JDBC Connections Supported.
+
+:heavy_check_mark: Microsoft SQL Server
+:heavy_check_mark: Oracle
+:heavy_check_mark: MySql
+:heavy_check_mark: Redshift
+:recycle: Others in development mode
 
 ## Authors & Contributors ✒️
 
